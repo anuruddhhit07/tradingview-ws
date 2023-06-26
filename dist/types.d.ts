@@ -6,11 +6,20 @@ export interface RawCandle {
     i: number;
     v: number[];
 }
+interface SymbolesType {
+    ticker: string;
+    barcount: number;
+}
 export interface GetCandlesParams {
     connection: TradingviewConnection;
     symbols: string[];
     amount?: number;
     timeframe?: TradingviewTimeframe;
+}
+export interface GetCandlesParamsNew {
+    connection: TradingviewConnection;
+    timeframe?: TradingviewTimeframe;
+    symbolswithDetail?: SymbolesType[];
 }
 export interface Candle {
     timestamp: number;
@@ -37,4 +46,5 @@ export interface TradingviewEvent {
     params: any[];
 }
 export declare type TradingviewTimeframe = number | '1D' | '1W' | '1M';
+export {};
 //# sourceMappingURL=types.d.ts.map

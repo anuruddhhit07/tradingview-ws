@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.connectAndSubscribe = exports.getCandles = exports.getCandlesV2 = exports.connect = exports.EVENT_NAMES = void 0;
+exports.getCandleswithbarcount = exports.connectAndSubscribe = exports.getCandles = exports.getCandlesV2 = exports.connect = exports.EVENT_NAMES = void 0;
 const axios_1 = __importDefault(require("axios"));
 const ws_1 = __importDefault(require("ws"));
 const randomstring_1 = __importDefault(require("randomstring"));
@@ -250,4 +250,90 @@ function connectAndSubscribe({ connection, symbols, timeframe = 1 }) {
     });
 }
 exports.connectAndSubscribe = connectAndSubscribe;
+function getCandleswithbarcount({ connection, timeframe = 60, symbolswithDetail = [{ ticker: `NSE:NIFTY`, barcount: 2 }] }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (symbolswithDetail.length === 0)
+            return [];
+        const chartSession = "cs_" + randomstring_1.default.generate(12);
+        // const batchSize = amount && amount < MAX_BATCH_SIZE ? amount : MAX_BATCH_SIZE
+        return new Promise(resolve => {
+            const allCandles = [];
+            let currentSymCandles = [];
+            let currentSymIndex = 0;
+            let symbol = symbolswithDetail[currentSymIndex].ticker;
+            let amount = symbolswithDetail[currentSymIndex].barcount;
+            let batchSize = amount && amount < types_1.MAX_BATCH_SIZE ? amount : types_1.MAX_BATCH_SIZE;
+            connection.send('chart_create_session', [chartSession, '']);
+            connection.send('resolve_symbol', [
+                chartSession,
+                `sds_sym_0`,
+                '=' + JSON.stringify({ symbol, adjustment: 'splits' })
+            ]);
+            connection.send('create_series', [
+                chartSession, 'sds_1', 's0', 'sds_sym_0', timeframe.toString(), batchSize, ''
+            ]);
+            const unsubscribe = connection.subscribe(event => {
+                // received new candles
+                if (event.name === 'timescale_update') {
+                    let newCandles = event.params[1]['sds_1']['s'];
+                    if (newCandles.length > batchSize) {
+                        newCandles = newCandles.slice(0, -currentSymCandles.length);
+                    }
+                    currentSymCandles = newCandles.concat(currentSymCandles);
+                    return;
+                }
+                // loaded all requested candles
+                if (['series_completed', 'symbol_error'].includes(event.name)) {
+                    const loadedCount = currentSymCandles.length;
+                    // if (loadedCount > 0 && loadedCount % batchSize === 0 && (!amount || loadedCount < amount)) {
+                    //   connection.send('request_more_data', [chartSession, 'sds_1', batchSize])
+                    //   return
+                    // }
+                    if (loadedCount > 0 && (!amount || loadedCount < amount)) {
+                        connection.send('request_more_data', [chartSession, 'sds_1', batchSize]);
+                        return;
+                    }
+                    // loaded all candles for current symbol
+                    if (amount)
+                        currentSymCandles = currentSymCandles.slice(0, amount);
+                    const candles = currentSymCandles.map(c => ({
+                        timestamp: c.v[0],
+                        open: c.v[1],
+                        high: c.v[2],
+                        low: c.v[3],
+                        close: c.v[4],
+                        volume: c.v[5]
+                    }));
+                    allCandles.push(candles);
+                    // next symbol
+                    if (symbolswithDetail.length - 1 > currentSymIndex) {
+                        currentSymCandles = [];
+                        currentSymIndex += 1;
+                        symbol = symbolswithDetail[currentSymIndex].ticker;
+                        amount = symbolswithDetail[currentSymIndex].barcount;
+                        batchSize = amount && amount < types_1.MAX_BATCH_SIZE ? amount : types_1.MAX_BATCH_SIZE;
+                        connection.send('resolve_symbol', [
+                            chartSession,
+                            `sds_sym_${currentSymIndex}`,
+                            '=' + JSON.stringify({ symbol, adjustment: 'splits' })
+                        ]);
+                        connection.send('modify_series', [
+                            chartSession,
+                            'sds_1',
+                            `s${currentSymIndex}`,
+                            `sds_sym_${currentSymIndex}`,
+                            timeframe.toString(),
+                            ''
+                        ]);
+                        return;
+                    }
+                    // all symbols loaded
+                    unsubscribe();
+                    resolve(allCandles);
+                }
+            });
+        });
+    });
+}
+exports.getCandleswithbarcount = getCandleswithbarcount;
 //# sourceMappingURL=index.js.map
