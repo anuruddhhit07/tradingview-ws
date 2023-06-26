@@ -9,6 +9,11 @@ export interface RawCandle {
   v: number[]
 }
 
+interface SymbolesType  {
+  ticker: string;
+  barcount: number;
+}
+
 export interface GetCandlesParams {
   connection: TradingviewConnection,
   symbols: string[],
@@ -16,6 +21,16 @@ export interface GetCandlesParams {
   timeframe?: TradingviewTimeframe
   // callback: (event: any) => void
 }
+export interface GetCandlesParamsNew {
+  connection: TradingviewConnection,
+  // symbols: string[],
+  // amount?: number
+  timeframe?: TradingviewTimeframe
+  symbolswithDetail?:SymbolesType[]
+  // callback: (event: any) => void
+}
+
+
 export interface Candle {
   timestamp: number
   high: number
