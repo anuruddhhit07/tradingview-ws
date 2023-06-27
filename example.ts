@@ -39,7 +39,7 @@ import { connect, getCandles, getCandlesV2,getCandleswithbarcount } from './src/
     const candles = await getCandleswithbarcount({
       connection,
       timeframe: "1D",
-      symbolswithDetail:[{ticker:`NSE:NIFTY`,barcount:2},{ticker:`NSE:SBIN`,barcount:3},{ticker:`NSE:TCS`,barcount:4}]
+      symbolswithDetail:[{ticker:`NSE:NIFTY`,barcount:3},{ticker:`NSE:SBIN`,barcount:4},{ticker:`NSE:TCS`,barcount:1}]
     })
     console.log(candles.map(data=>console.log(data)))
     const end = new Date().getTime();

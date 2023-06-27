@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCandleswithbarcount = exports.connectAndSubscribe = exports.getCandles = exports.getCandlesV2 = exports.connect = exports.EVENT_NAMES = void 0;
 const axios_1 = __importDefault(require("axios"));
 const ws_1 = __importDefault(require("ws"));
+//import * as WebSocket from "ws"
 const randomstring_1 = __importDefault(require("randomstring"));
 const types_1 = require("./types");
 exports.EVENT_NAMES = {
@@ -270,7 +271,7 @@ function getCandleswithbarcount({ connection, timeframe = 60, symbolswithDetail 
                 '=' + JSON.stringify({ symbol, adjustment: 'splits' })
             ]);
             connection.send('create_series', [
-                chartSession, 'sds_1', 's0', 'sds_sym_0', timeframe.toString(), batchSize, ''
+                chartSession, 'sds_1', 's0', 'sds_sym_0', timeframe.toString(), 1, ''
             ]);
             const unsubscribe = connection.subscribe(event => {
                 // received new candles

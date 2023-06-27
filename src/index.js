@@ -38,8 +38,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 exports.__esModule = true;
 exports.getCandleswithbarcount = exports.connectAndSubscribe = exports.getCandles = exports.getCandlesV2 = exports.connect = exports.EVENT_NAMES = void 0;
 var axios_1 = require("axios");
-var ws_1 = require("ws");
-var randomstring_1 = require("randomstring");
+// import WebSocket, { EventEmitter } from 'ws'
+var WebSocket = require("ws");
+var randomstring = require("randomstring");
 var types_1 = require("./types");
 exports.EVENT_NAMES = {
     TIMESCALE_UPDATE: 'timescale_update',
@@ -106,7 +107,7 @@ function connect(options) {
                     token = resp.data.match(/"auth_token":"(.+?)"/)[1];
                     _a.label = 2;
                 case 2:
-                    connection = new ws_1["default"]("wss://prodata.tradingview.com/socket.io/websocket", {
+                    connection = new WebSocket("wss://prodata.tradingview.com/socket.io/websocket", {
                         origin: "https://prodata.tradingview.com"
                     }).setMaxListeners(400);
                     subscribers = new Set();
@@ -155,7 +156,7 @@ function getCandlesV2(_a) {
                     if (symbols.length === 0)
                         return [2 /*return*/, []]; // at most make 10 requests every second, but evenly spaced.
                     d = symbols.map(function (symbol) { return new Promise(function (resolve, reject) {
-                        var chartSession = "cs_" + randomstring_1["default"].generate(12);
+                        var chartSession = "cs_" + randomstring.generate(12);
                         var batchSize = amount && amount < types_1.MAX_BATCH_SIZE ? amount : types_1.MAX_BATCH_SIZE;
                         connection.send('chart_create_session', [chartSession, '']);
                         connection.send('resolve_symbol', [
@@ -191,7 +192,7 @@ function getCandles(_a) {
         return __generator(this, function (_c) {
             if (symbols.length === 0)
                 return [2 /*return*/, []];
-            chartSession = "cs_" + randomstring_1["default"].generate(12);
+            chartSession = "cs_" + randomstring.generate(12);
             batchSize = amount && amount < types_1.MAX_BATCH_SIZE ? amount : types_1.MAX_BATCH_SIZE;
             return [2 /*return*/, new Promise(function (resolve) {
                     var allCandles = [];
@@ -274,7 +275,7 @@ function connectAndSubscribe(_a) {
         return __generator(this, function (_c) {
             if (symbols.length === 0)
                 return [2 /*return*/, []];
-            chartSession = "cs_" + randomstring_1["default"].generate(12);
+            chartSession = "cs_" + randomstring.generate(12);
             currentSymIndex = 0;
             symbol = symbols[currentSymIndex];
             connection.send('chart_create_session', [chartSession, '']);
@@ -315,7 +316,7 @@ function getCandleswithbarcount(_a) {
         return __generator(this, function (_d) {
             if (symbolswithDetail.length === 0)
                 return [2 /*return*/, []];
-            chartSession = "cs_" + randomstring_1["default"].generate(12);
+            chartSession = "cs_" + randomstring.generate(12);
             // const batchSize = amount && amount < MAX_BATCH_SIZE ? amount : MAX_BATCH_SIZE
             return [2 /*return*/, new Promise(function (resolve) {
                     var allCandles = [];
@@ -331,7 +332,7 @@ function getCandleswithbarcount(_a) {
                         '=' + JSON.stringify({ symbol: symbol, adjustment: 'splits' })
                     ]);
                     connection.send('create_series', [
-                        chartSession, 'sds_1', 's0', 'sds_sym_0', timeframe.toString(), batchSize, ''
+                        chartSession, 'sds_1', 's0', 'sds_sym_0', timeframe.toString(), 1, ''
                     ]);
                     var unsubscribe = connection.subscribe(function (event) {
                         // received new candles
@@ -350,6 +351,7 @@ function getCandleswithbarcount(_a) {
                             //   connection.send('request_more_data', [chartSession, 'sds_1', batchSize])
                             //   return
                             // }
+                            console.log(loadedCount, amount);
                             if (loadedCount > 0 && (!amount || loadedCount < amount)) {
                                 connection.send('request_more_data', [chartSession, 'sds_1', batchSize]);
                                 return;

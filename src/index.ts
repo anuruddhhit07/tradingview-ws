@@ -1,5 +1,6 @@
 import axios from 'axios'
 import WebSocket, { EventEmitter } from 'ws'
+//import * as WebSocket from "ws"
 import randomstring from "randomstring"
 import { Candle, ConnectionOptions, GetCandlesParams,GetCandlesParamsNew, MAX_BATCH_SIZE, MessagePayload, RawCandle, Subscriber, TradingviewConnection, Unsubscriber } from './types'
 
@@ -266,7 +267,7 @@ export async function getCandleswithbarcount({ connection,timeframe = 60,symbols
     ])
 
     connection.send('create_series', [
-      chartSession, 'sds_1', 's0', 'sds_sym_0', timeframe.toString(), batchSize, ''
+      chartSession, 'sds_1', 's0', 'sds_sym_0', timeframe.toString(), 1, ''
     ])
 
     const unsubscribe = connection.subscribe(event => {
